@@ -1,0 +1,969 @@
+\documentclass{jsarticle}
+\setlength\intextsep{0pt}
+\usepackage[dvipdfmx]{graphicx}		
+\usepackage{caption}					
+\usepackage{subfig}
+\usepackage{enumerate}						
+\usepackage{amsmath,amssymb}			
+\usepackage[top=25truemm, bottom=25truemm, left=25truemm, right=25truemm]{geometry}
+\usepackage{bm}
+\usepackage{listings, jlisting}
+\usepackage{multirow}
+\usepackage{slashbox}
+\usepackage{url}
+
+\newcommand{\argmax}{\mathop{\rm max}\limits}
+\newcommand{\argmin}{\mathop{\rm min}\limits}
+
+\renewcommand\thefootnote{*\arabic{footnote}}	
+
+\newcommand{\mr}{\multirow}
+
+
+
+\begin{document}
+
+
+
+\newpage
+
+
+\section{目的}
+\begin{itemize}
+	\item インターネットで利用されるTCP/IPについて理解する
+	\item ネットワークに応じたIPアドレスやネットマスクの設計ができる
+	\item Virtual LAN について理解する
+	\item スイッチ, ルータの設定方法を習熟する
+	\item ルーティングプロトコルについて理解する 
+\end{itemize}
+
+\section{実験項目}
+\begin{enumerate}[1)]
+	\item ネットワーク1 - スイッチを用いたネットワーク - (1週目)
+	\item ネットワーク2 - ルータを用いたネットワーク - (1週目)
+	\item ネットワーク3 - スイッチ及びルータの併合系ネットワーク - (2週目)
+\end{enumerate}
+
+\section{使用器具}
+\begin{itemize}
+	\item ノートパソコン
+	\item スイッチ
+	\item ルータ
+	\item LANコネクタ
+	\item イーサネットクロスケーブル
+\end{itemize}
+
+
+\section{実験}
+
+\subsection{ネットワーク1}
+スイッチを用いたネットワークの設計を行った. スイッチ2台, ノートパソコン(以下PC)4台を使用し, 図\ref{fig:network1}のように
+ネットワークを構成した. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{figure}[htb]%fig.01
+\begin{center}
+\setlength{\unitlength}{1mm}
+%\begin{picture}(50, 40)(0,0)
+\includegraphics[width=150mm]{network1.png}
+%\end{picture}
+\end{center}
+
+\caption{ネットワーク1の構成}
+\label{fig:network1}
+\end{figure}
+% ++++++++++++++++++++++++++++++++++++
+
+まず, ネットワークをLANコネクタ及びイーサネットクロスケーブルによって物理的に接続した. その後, スイッチのVirtual LANを
+表\ref{tab:switch_VLAN}のように, インターフェイスを表\ref{tab:switch_port}のように, PCのインターフェイスを表\ref{tab:PC_interface}
+のように設定した. また, 各種パスワードを表\ref{tab:password}のように設定した. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{スイッチのVirtual LANの名称設定}
+    \begin{tabular}{cc} \hline
+      VLAN ID & 名前   \\ \hline 
+      1 & default   \\
+      2 & VLANX   \\
+      3 & VLANY   \\ \hline
+    \end{tabular}
+	\label{tab:switch_VLAN}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{スイッチのポート割り当て}
+    \begin{tabular}{cc} \hline
+      ポート & 割り当て   \\ \hline 
+      1 & VLANX   \\
+      2 & VLANY   \\
+      3 & トランク   \\ \hline
+    \end{tabular}
+	\label{tab:switch_port}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{PCのインターフェイス}
+    \begin{tabular}{cc} \hline
+      PC & IPアドレス   \\ \hline 
+      PC01 & 192.168.0.1   \\
+      PC02 & 192.168.0.2   \\
+      PC03 & 192.168.1.1   \\ 
+      PC04 & 192.168.1.2 \\ \hline 
+      サブネットマスク & 255.255.255.0 \\ \hline
+    \end{tabular}
+	\label{tab:PC_interface}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{パスワード設定(Switch)}
+    \begin{tabular}{cc} \hline
+     パスワードの種類 & password \\ \hline
+      スイッチの特権パスワード & niihama   \\ 
+      スイッチのコンソールパスワード & nnct \\ \hline
+    \end{tabular}
+	\label{tab:password}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+次に, show vlanコマンドによるVLANポートの対応の確認し, 記録を行った.
+また, show running-configコマンドを利用してスイッチの設定状況の確認し, 記録を行った. 
+
+続いて, pingによる接続テストを行い, どの通信路間でデータが送信できるかを確認し, 結果をまとめた. 
+
+
+
+\subsection{ネットワーク2} 
+ルータを用いたネットワークの設計を行った. ネットワークの構成図を図\ref{fig:network2}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{figure}[htb]%fig.01
+\begin{center}
+\setlength{\unitlength}{1mm}
+%\begin{picture}(50, 40)(0,0)
+\includegraphics[width=150mm]{network2.png}
+%\end{picture}
+\end{center}
+
+\caption{ネットワーク2の構成}
+\label{fig:network2}
+\end{figure}
+% ++++++++++++++++++++++++++++++++++++
+
+初めに, ネットワークの物理的接続を行った. そして別紙資料に従い, ルータ及びPCの設定を行った. 各機器のインターフェイスは
+表\ref{tab:router_interface}のように設定した. また, 各種パスワードは表\ref{tab:password2}のように設定した. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{インターフェイスの設定}
+    \begin{tabular}{cccl} \hline
+      ネットワーク & ネットワークアドレス & サブネットマスク & 端末  \\ \hline 
+      \mr{2}{*}{(1)} & \mr{2}{*}{10.0.0.0} & \mr{2}{*}{255.0.0.0}  & 10.0.0.1	~~~~~(PC01 LANコネクタ)  \\  \cline{4-4}
+      &&& 10.0.0.2 	~~~~	(RouterA E0)   \\  \hline
+       \mr{2}{*}{(2)} & \mr{2}{*}{172.20.11.0} & \mr{2}{*}{255.255.255.0}  & 172.20.11.1	~(RouterA S0)  \\  \cline{4-4}
+      &&& 172.20.11.2 		~(RouterB S1)   \\  \hline
+      \mr{2}{*}{(3)} & \mr{2}{*}{192.168.12.0} & \mr{2}{*}{255.255.255.0}  & 192.168.12.1	(PC02 LANコネクタ)  \\  \cline{4-4}
+      &&& 192.168.12.2 		(RouterB E0)   \\  \hline
+    \end{tabular}
+	\label{tab:router_interface}
+  \end{center}
+\end{table}
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{パスワード設定(Router)}
+    \begin{tabular}{cc} \hline
+     パスワードの種類 & password \\ \hline
+      ルータの特権パスワード & niihama   \\ 
+      ルータのコンソールパスワード & nnct \\ \hline
+    \end{tabular}
+	\label{tab:password2}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+ルータのshow running-configコマンドを利用してルータの設定状況を確認し, 記録した. また,  show interfaceコマンドを利用して
+ルータごとに使用している各インターフェイスの動作状況を確認し, 記録した. 
+
+show ip routeコマンドで現在のルーティングテーブルを表示させ, 記録した. そして, 別紙を参考に, pingによる接続テストとtraceroute
+コマンドによる経路調査を行い, 結果を表にまとめた. 
+
+それぞれのルータに対して, 繋がっている2つのネットワークのネットワークアドレスをRIPで配布し, 再びshow ip routeコマンドによる確認, 
+ping接続テスト, tracerouteコマンドによる経路調査を行い, 結果をまとめた. 
+
+
+\subsection{ネットワーク3} 
+ルータとスイッチを用いて, ネットワークの設計を行った. ネットワークの構成図を図\ref{fig:network3}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{figure}[htb]%fig.01
+\begin{center}
+\setlength{\unitlength}{1mm}
+%\begin{picture}(50, 40)(0,0)
+\includegraphics[width=150mm]{network3.png}
+%\end{picture}
+\end{center}
+
+\caption{ネットワーク3の構成}
+\label{fig:network3}
+\end{figure}
+% ++++++++++++++++++++++++++++++++++++
+
+ネットワークを物理的に接続した. そしてスイッチ, ルータ, PCを表\ref{tab:switch_vlan3}, 表\ref{tab:switch_port3}のように設定した. 
+なお, ルータのシリアルポートの設定は実験4-1, 4-2と同様にしている. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{スイッチのVirtual LANの名称設定}
+    \begin{tabular}{cc} \hline
+      VLAN ID & 名前   \\ \hline 
+      1 & default   \\
+      2 & VLANR    \\
+      3 & VLAND    \\ \hline
+    \end{tabular}
+	\label{tab:switch_vlan3}
+  \end{center}
+\end{table}
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{スイッチのポート割り当て}
+    \begin{tabular}{ccc} \hline
+      スイッチ & ポート & 割り当て   \\ \hline 
+      \mr{4}{*}{SwitchA} & 1 & VLAND \\  \cline{2-3}
+      & 2 & VLANR  \\ \cline{2-3}
+      & 3 & トランク  \\ \cline{2-3}
+      & 4 & VLAND  \\ \hline
+      \mr{4}{*}{SwitchB} & 1 & VLANR \\  \cline{2-3}
+      & 2 & VLAND  \\ \cline{2-3}
+      & 3 & トランク  \\ \cline{2-3}
+      & 4 & VLANR  \\ \hline
+    \end{tabular}
+	\label{tab:switch_port3}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+
+ネットワークアドレス192.168.25.0 / 255.255.255.0を分割してサブネットワークアドレスを作成し, ネットワークを表\ref{tab:subnet_address}
+のように割り当てた. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{サブネットワークアドレスの割り当て}
+    \begin{tabular}{cccc} \hline
+      ネットワーク & サブネットワークアドレス & 使用可能なIPアドレス & VLAN   \\ \hline 
+      (1) & 192.168.25.0 / 255.255.255.192 & 192.168.25.1 $\sim$ 192.168.25.62 & D  \\
+      (2) & 192.168.25.64 / 255.255.255.192 & 192.168.25.65 $\sim$ 192.168.25.126 & ×   \\
+      (3) & 192.168.25.128 / 255.255.255.192 & 192.168.25.129 $\sim$ 192.168.25.191 & R   \\ \hline
+    \end{tabular}
+	\label{tab:subnet_address}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+割り当てられたネットワーク内にあるルータとPCのインターフェイスにIPアドレスを表\ref{tab:IPaddress3}割り当てた. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{IPアドレスの割り当て}
+    \begin{tabular}{cccl} \hline
+    装置 & インターフェイス & VLAN & IPアドレス \\ \hline
+      \mr{2}{*}{RouterA} & S0 & × & 192.168.25.65 \\  \cline{2-4}
+      & E0 & D &  192.168.25.1  \\ \hline
+      \mr{2}{*}{RouterB} & S1 & × & 192.168.25.66 \\  \cline{2-4}
+      & E0 &R &  192.168.25.129  \\ \hline
+      PC01 & LANコネクタ & D & 192.168.25.2 \\  \hline
+      PC02 & LANコネクタ & R & 192.168.25.130 \\  \hline
+      PC03 & LANコネクタ & R & 192.168.25.131 \\  \hline
+      PC04 & LANコネクタ & D & 192.168.25.3 \\  \hline
+      
+    \end{tabular}
+	\label{tab:IPaddress3}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+実験4-1と同様にshow vlan, show running-configを行い, 結果を記録した. また, 実験4-2と同様にshow running-config, show interface, 
+show ip route, ping, traceroute, RIPによるネットワークアドレスの配布を行い, 結果を記録した. 
+
+
+
+
+\section{実験結果}
+
+\subsection{ネットワーク1} 
+
+PC01によるshow running-configコマンド, show vlanコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// show running-config
+hostname SwitchA
+!
+enable password niihama
+!
+!
+!
+!
+!
+!
+ip subnet-zero
+!
+!
+!
+interface FastEthernet0/1
+ switchport access vlan 2
+!
+interface FastEthernet0/2
+ switchport access vlan 3
+!
+interface FastEthernet0/3
+ switchport mode trunk
+!
+
+// show vlan 
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/4, Fa0/5, Fa0/6, Fa0/7,
+                                                Fa0/8, Fa0/9, Fa0/10, Fa0/11,
+                                                Fa0/12, Fa0/13, Fa0/14, Fa0/15,
+                                                Fa0/16, Fa0/17, Fa0/18, Fa0/19,
+                                                Fa0/20, Fa0/21, Fa0/22, Fa0/23,
+                                                Fa0/24, Gi0/1, Gi0/2
+2    VLANX                            active    Fa0/1
+3    VLANY                            active    Fa0/2
+\end{lstlisting}
+
+PC02によるshow running-configコマンド, show vlanコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// show running-config
+hostname SwitchB
+!
+enable password niihama
+!
+!
+!
+!
+!
+!
+ip subnet-zero
+!
+!
+!
+interface FastEthernet0/1
+ switchport access vlan 2
+!
+interface FastEthernet0/2
+ switchport access vlan 3
+!
+interface FastEthernet0/3
+ switchport mode trunk
+!
+
+// show vlan 
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/4, Fa0/5, Fa0/6, Fa0/7,
+                                                Fa0/8, Fa0/9, Fa0/10, Fa0/11,
+                                                Fa0/12, Fa0/13, Fa0/14, Fa0/15,
+                                                Fa0/16, Fa0/17, Fa0/18, Fa0/19,
+                                                Fa0/20, Fa0/21, Fa0/22, Fa0/23,
+                                                Fa0/24, Gi0/1, Gi0/2
+2    VLANX                            active    Fa0/1
+3    VLANY                            active    Fa0/2
+\end{lstlisting}
+\vspace{1mm}
+ping による接続テストの結果を表\ref{tab:network1_ping}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{ネットワーク1のping接続テスト}
+    \begin{tabular}{|c|c|c|c|c|} \hline
+       & PC01 & PC02 & PC03 & PC04   \\ \hline 
+      PC01 & null & ○ & × & ×  \\ \hline
+      PC02 & ○ & null & × & ×   \\ \hline
+      PC03 & × & × & null & ○   \\ \hline
+       PC04 & × & × & ○ & null    \\ \hline
+    \end{tabular}
+	\label{tab:network1_ping}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+\subsection{ネットワーク2}
+
+PC01のRIP前とRIP後のshow running-config, show interface, show ip route, tracerouteコマンドの結果を以下に示す.
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running-config---
+hostname RouterA
+!
+enable password niihama
+!
+ip subnet-zero
+!
+!
+!
+interface Ethernet0
+ ip address 10.0.0.2 255.0.0.0
+ no ip directed-broadcast
+!
+interface Serial0
+ bandwidth 386
+ no ip address
+ no ip directed-broadcast
+ no ip mroute-cache
+ shutdown
+!
+interface Serial1
+ bandwidth 265
+ ip address 172.20.11.1 255.255.255.0
+ no ip directed-broadcast
+!
+ip classless
+!
+!
+line con 0
+ password nnct
+ login
+ transport input none
+line vty 0 4
+!
+end
+
+// ---show interface---
+Ethernet0 is up, line protocol is up
+Serial1 is up, line protocol is up
+
+// ---show ip route---
+C    10.0.0.0/8 is directly connected, Ethernet0
+
+// ---traceroute---
+10.0.0.2 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     2 ms     2 ms     2 ms  10.0.0.2
+
+トレースを完了しました。
+
+// ---show ip route (RIP配布後)---
+R    192.168.12.0/24 [120/1] via 172.20.11.2, 00:00:00, Serial1
+     172.20.0.0/24 is subnetted, 1 subnets
+C       172.20.11.0 is directly connected, Serial1
+C    10.0.0.0/8 is directly connected, Ethernet0
+
+// ---tracert (RIP配布後)--- 
+192.168.12.1 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     2 ms     2 ms     2 ms  10.0.0.2
+  2    24 ms    24 ms    24 ms  172.20.11.2
+  3    27 ms    28 ms    27 ms  192.168.12.1
+
+トレースを完了しました。
+\end{lstlisting}
+
+PC02のRIP前とRIP後のshow running-config, show interface, show ip route, tracerouteコマンドの結果を以下に示す.
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running-config---
+hostname RouterB
+!
+enable password niihama
+!
+ip subnet-zero
+!
+!
+!
+interface Ethernet0
+ ip address 192.168.12.2 255.255.255.0
+ no ip directed-broadcast
+!
+interface Serial0
+ no ip address
+ no ip directed-broadcast
+ --More--
+ shutdown
+!
+interface Serial1
+ bandwidth 386
+ ip address 172.20.11.2 255.255.255.0
+ no ip directed-broadcast
+ clockrate 64000
+!
+ip classless
+!
+!
+line con 0
+ password nnct
+ login
+ transport input none
+line vty 0 4
+!
+end
+
+// ---show interface---
+Ethernet0 is up, line protocol is up
+
+Serial0 is up, line protocol is up
+
+
+// ---show ip route---
+C    192.168.12.0/24 is directly connected, Ethernet0
+     172.20.0.0/24 is subnetted, 1 subnets
+C       172.20.11.0 is directly connected, Serial0
+
+// ---traceroute---
+192.168.12.2 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     2 ms     2 ms    22 ms  192.168.12.2
+
+トレースを完了しました。
+
+
+// ---show ip route (RIP配布後)---
+C    192.168.12.0/24 is directly connected, Ethernet0
+     172.20.0.0/24 is subnetted, 1 subnets
+C       172.20.11.0 is directly connected, Serial0
+R    10.0.0.0/8 [120/1] via 172.20.11.1, 00:00:13, Serial0
+
+
+// ---tracert (RIP配布後)---
+10.0.0.1 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     4 ms     2 ms     2 ms  192.168.12.2
+  2    24 ms    24 ms    24 ms  172.20.11.1
+  3    29 ms    27 ms    27 ms  10.0.0.1
+
+トレースを完了しました。
+\end{lstlisting}
+
+RIP配布前のping接続テストの結果を表\ref{tab:ping2_nonrip}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{ネットワーク2のRIP配布前ping接続テスト}
+    \begin{tabular}{|c|c|c|c|c|} \hline
+       &  RouterA & RouterB  & PC01 & PC02\\ \hline 
+RouterA & null & ○ & ○ & × \\ \hline 
+RouterB & ○ & null & × & ○ \\ \hline 
+PC01 & ○ & × & null & × \\ \hline 
+PC02 & × & ○ & × & null \\ \hline 
+    \end{tabular}
+	\label{tab:ping2_nonrip}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+RIP配布後のping接続テストの結果を表\ref{tab:ping2_rip}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{ネットワーク2のRIP配布後ping接続テスト}
+    \begin{tabular}{|c|c|c|c|c|} \hline
+       &  RouterA & RouterB  & PC01 & PC02\\ \hline 
+RouterA & null & ○ & ○ & ○ \\ \hline 
+RouterB & ○ & null & ○ & ○ \\ \hline 
+PC01 & ○ & ○ & null & ○ \\ \hline 
+PC02 & ○ & ○ & ○ & null \\ \hline 
+    \end{tabular}
+	\label{tab:ping2_rip}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+
+\subsection{ネットワーク3}
+
+PC03によるshow running-configコマンド, show vlanコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running config---
+hostname SwitchA
+!
+enable password niihama
+!
+!
+!
+!
+!
+!
+ip subnet-zero
+!
+!
+!
+interface FastEthernet0/1
+ switchport access vlan 3
+!
+interface FastEthernet0/2
+ switchport access vlan 2
+!
+interface FastEthernet0/3
+ switchport mode trunk
+!
+interface FastEthernet0/4
+ switchport access vlan 3
+
+// ---show vlan の結果>---
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/4, Fa0/5, Fa0/6, Fa0/7,
+                                                Fa0/8, Fa0/9, Fa0/10, Fa0/11,
+                                                Fa0/12, Fa0/13, Fa0/14, Fa0/15,
+                                                Fa0/16, Fa0/17, Fa0/18, Fa0/19,
+                                                Fa0/20, Fa0/21, Fa0/22, Fa0/23,
+                                                Fa0/24, Gi0/1, Gi0/2
+2    VLANR                            active    Fa0/2
+3    VLAND                            active    Fa0/1
+\end{lstlisting}
+
+PC04によるshow running-configコマンド, show vlanコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running config---
+hostname SwitchB
+!
+enable password niihama
+!
+!
+!
+!
+!
+!
+ip subnet-zero
+!
+!
+!
+interface FastEthernet0/1
+ switchport access vlan 2
+!
+interface FastEthernet0/2
+ switchport access vlan 3
+!
+interface FastEthernet0/3
+ switchport mode trunk
+!
+interface FastEthernet0/4
+ switchport access vlan 2
+ 
+// ---show vlan---
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/5, Fa0/6, Fa0/7, Fa0/8,
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12,
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16,
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20,
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24,
+                                                Gi0/1, Gi0/2
+2    VLANR                            active    Fa0/1, Fa0/4
+3    VLAND                            active    Fa0/2
+\end{lstlisting}
+
+PC01によるshow running-configコマンド, show interfaceコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running config---
+hostname RouterA
+!
+enable password niihama
+!
+ip subnet-zero
+!
+!
+!
+interface Ethernet0
+ ip address 192.168.25.1 255.255.255.192
+ no ip directed-broadcast
+ shutdown
+!
+interface Serial0
+ bandwidth 386
+ ip address 192.168.25.65 255.255.255.192
+ no ip directed-broadcast
+ no ip mroute-cache
+!
+interface Serial1
+ no ip address
+ no ip directed-broadcast
+ shutdown
+!
+ip classless
+!
+!
+line con 0
+ password nnct
+ login
+ transport input none
+line vty 0 4
+!
+end
+
+// ---show interface---
+Ethernet0 is up, line protocol is up
+Serial0 is up, line protocol is up
+\end{lstlisting}
+
+PC02によるshow running-configコマンド, show interfaceコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show running config---
+hostname RouterB
+!
+enable password niihama
+!
+ip subnet-zero
+!
+!
+!
+interface Ethernet0
+ ip address 192.168.25.129 255.255.255.192
+ no ip directed-broadcast
+!
+interface Serial0
+ no ip address
+ no ip directed-broadcast
+ no ip mroute-cache
+ shutdown
+ no fair-queue
+!
+interface Serial1
+ bandwidth 386
+ ip address 192.168.25.66 255.255.255.192
+ no ip directed-broadcast
+ clockrate 64000
+!
+ip classless
+!
+!
+line con 0
+ password nnct
+ login
+ transport input none
+line vty 0 4
+ password class
+ login
+!
+end
+
+// ---show interface---
+Ethernet0 is up, line protocol is up
+Serial0 is up, line protocol is up
+\end{lstlisting}
+
+PC01によるshow ip routeコマンド, show tracerouteコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show ip route(DTE rip前)---
+     192.168.25.0/26 is subnetted, 2 subnets
+C       192.168.25.64 is directly connected, Serial0
+C       192.168.25.0 is directly connected, Ethernet0
+
+// ---traceroute (rip前 to PC04)---
+JKN-KIARI [192.168.25.3] へのルートをトレースしています
+経由するホップ数は最大 30 です:
+
+  1     1 ms     1 ms     1 ms  JKN-KIARI [192.168.25.3]
+
+トレースを完了しました。
+
+// ---show ip route(DTE rip後)---
+     192.168.25.0/26 is subnetted, 3 subnets
+C       192.168.25.64 is directly connected, Serial0
+C       192.168.25.0 is directly connected, Ethernet0
+R       192.168.25.128 [120/1] via 192.168.25.66, 00:00:26, Serial0
+
+// ---tracert (rip後 to PC02)---
+192.168.25.130 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     3 ms     1 ms     1 ms  192.168.25.1
+  2    24 ms    23 ms    24 ms  192.168.25.66
+  3    29 ms    27 ms    27 ms  192.168.25.130
+
+トレースを完了しました。
+
+// ---tracert (rip後 to PC03)---
+192.168.25.131 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     3 ms     1 ms     1 ms  192.168.25.1
+  2    31 ms    47 ms    30 ms  192.168.25.66
+  3    29 ms    27 ms    27 ms  192.168.25.131
+
+トレースを完了しました。
+\end{lstlisting}
+
+PC02によるshow ip routeコマンド, show tracerouteコマンドの結果を以下に示す. 
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+// ---show ip route(DCE rip前)---
+     192.168.25.0/26 is subnetted, 2 subnets
+C       192.168.25.64 is directly connected, Serial1
+C       192.168.25.128 is directly connected, Ethernet
+
+// ---tracert--- ( rip前 to PC03）
+JKN-HOIMI [192.168.25.131] へのルートをトレースしています
+経由するホップ数は最大 30 です:
+
+  1     1 ms     1 ms     1 ms  JKN-HOIMI [192.168.25.131]
+
+トレースを完了しました。
+
+// ---show ip route (DCE rip後)---
+     192.168.25.0/26 is subnetted, 3 subnets
+C       192.168.25.64 is directly connected, Serial1
+R       192.168.25.0 [120/1] via 192.168.25.65, 00:00:03, Serial1
+C       192.168.25.128 is directly connected, Ethernet0
+
+// ---taracert--- (rip後 to PC01) 
+192.168.25.2 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     3 ms     2 ms     1 ms  192.168.25.129
+  2    24 ms    24 ms    24 ms  192.168.25.65
+  3    27 ms    27 ms    27 ms  192.168.25.2
+
+トレースを完了しました。
+
+// ---tracert--- (rip後 to PC04)
+192.168.25.3 へのルートをトレースしています。経由するホップ数は最大 30 です
+
+  1     2 ms     1 ms     1 ms  192.168.25.129
+  2    24 ms    24 ms    24 ms  192.168.25.65
+  3    29 ms    27 ms    27 ms  192.168.25.3
+
+トレースを完了しました。
+\end{lstlisting}
+
+RIP配布前のping接続テストの結果を表\ref{tab:ping3_nonrip}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{ネットワーク3のRIP配布前ping接続テスト}
+    \begin{tabular}{|c|c|c|c|c|c|c|} \hline
+       & PC01 & PC02 & PC03 & PC04 & RouterA & RouterB  \\ \hline 
+PC01 & null & × & × & ○ & ○ & ×  \\  \hline
+PC02 & × & null & ○ & × & × & ○  \\  \hline
+PC03 & × & ○ & null & × & × & ○  \\  \hline
+PC04 & ○ & × & × & null & ○ & ×  \\  \hline
+RouterA & ○ & × & × & ○ & null & ×  \\  \hline
+RouterB & × & ○ & ○ & × & × & null  \\  \hline
+    \end{tabular}
+	\label{tab:ping3_nonrip}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+RIP配布後のping接続テストの結果を表\ref{tab:ping3_rip}に示す. 
+
+% ++++++++++++++++++++++++++++++++++++
+\begin{table}[htb]
+  \begin{center}
+    \caption{ネットワーク3のRIP配布後ping接続テスト}
+    \begin{tabular}{|c|c|c|c|c|c|c|} \hline
+       & PC01 & PC02 & PC03 & PC04 & RouterA & RouterB  \\ \hline 
+PC01 & null & ○ & ○ & ○ & ○ & ○  \\  \hline
+PC02 & ○ & null & ○ & ○ & ○ & ○  \\  \hline
+PC03 & ○ & ○ & null & ○ & ○ & ○  \\  \hline
+PC04 & ○ & ○ & ○ & null & ○ & ○  \\  \hline
+RouterA & ○ & ○ & ○ & ○ & null & ○  \\  \hline
+RouterB & ○ & ○ & ○ & ○ & ○ & null  \\  \hline
+    \end{tabular}
+	\label{tab:ping3_rip}
+  \end{center}
+\end{table}
+% ++++++++++++++++++++++++++++++++++++
+
+
+
+\section{考察}
+\begin{itemize}
+	\item スイッチはどのような装置か. \\
+		スイッチはホストのコンピュータから送信されてきたデータに対し, MACアドレスを学習することによって任意の
+			ポートへデータを送信することができる. スイッチのもととなる機器としてブリッジが挙げられるが, 
+			ブリッジも同様にMACアドレスを学習することでデータを適切なポートに送信する. ブリッジとスイッチの違いとしては
+			ブリッジが通常ポートが２つしかないのに対し, スイッチでは多くのポートがあるという点である. すなわち, スイッチは
+			マルチポートブリッジとして考えることができる. よって, ブリッジではあるポートから受信したデータをもう一方の
+			ポートから出すか出さないかだけを決定していたが, スイッチでは, あるポートから受信したデータを他の複数ポートの
+			どこから出すかを決めることが可能である. また, スイッチはレイヤ2によってデータの送信を決定するため, L2スイッチ
+			と呼ばれるが, 機器によってはさらにレイヤ3やレイヤ7の機能を有するものもあり, L3スイッチやL7スイッチといった
+			スイッチも存在する. \\
+		
+	\item Virtual LANとは何か. \\
+		Virtual LANはネットワークを仮想的に分割する機能である. ネットワークのトポロジーを変更したい場合や, ネットワークの
+		混雑を回避したい場合に柔軟に対応することができる. これは, 物理的に配線を変更しなくとも, 各ポートで任意の
+		ブロードキャストドメインを割り当てることができるためである. また, 通常ブリッジやスイッチではブロードキャストは
+		ネットワーク全体に送られてしまうが, Virtual LANによってブロードキャストの送信範囲を限定することで, セキュリティの
+		向上が期待できる. よって, 一つのVirtual LANはブロードキャストドメインとしてみなせる. \\
+	
+	\item  ネットワーク1のように別々のスイッチに接続されたPC間でネットワーク接続が実現するのはなぜか.  \\
+		ネットワーク1ではPC間の通信にスイッチが用いられており, スイッチがMACアドレスを学習することによってネットワークの
+		接続が実現する. MACアドレスはネットワーク機器のハードウェアに対して一意に割り当てられているアドレスであり, 
+		MACアドレスを解析することで任意のPCにデータを送信することが可能となる. すなわち, スイッチがデータを中継する際に
+		データリンク層のフレームヘッダ内にあるMACアドレスを学習し, どのポートが宛先のMACアドレスかを判断することで, 
+		ネットワークが実現する. \\
+	
+	\item ルータはどのような装置か. \\
+		ルータは異なるネットワークを繋げてパケット中継を行う機器である. OSI参照モデルの3層にあたるネットワーク層による
+		処理を行う. スイッチとルータを比較した場合, スイッチがMACアドレスを解析しパケットを送信するのに対し, ルータは
+		IPアドレスによってパケットを送信する. そのため, ルータとL3スイッチはほとんど同じものとみなせるが, 処理の主体が
+		ハードウェアかソフトウェアか, 対応のプロトコルがTCP/IPのみかそうでないか, 導入コストが低いか高いか, といった
+		点で異なる. また, ルータは異なるデータリンクを相互に接続することができ, イーサネットとイーサネット, イーサネットと
+		FDDI(Fiber Distributed Data Interface)を接続できる. \\
+	
+	\item ルーティングプロトコルとは何か. なぜルーティングプロトコルを設定すれば実験結果のように接続の状況が変化するのか. \\
+		ネットワークの経路情報はルーティングテーブルというデータに格納されるが, このルーティングテーブルをルータ間で
+		やりとりし, 互いの経路を把握するためのプロトコルがルーティングプロトコルである. ルーティングにはスタティック・
+		ルーティングとダイナミック・ルーティングが存在するが, スタティック・ルーティングは経路情報が動的に変更されない. 
+		そのため, スタティック・ルーティングではルーティングプロトコルを必要としない. また, ルーティングプロトコルは大きく
+		IGP(Interior Gateway Protocol)とEGP(Exterior Gateway Protocol)に分けられるが, 実験で用いたRIP
+		(Routing Information Protocol)はIGPであり, メトリックに含まれるホップ数を元に最適経路を決定する. 
+		RIPは非常に古くから用いられているルーティングプロトコルであるが, ネットワークが大きくなるにつれて経路の収束に
+		時間がかかってしまうため, 大規模ネットワークには適さない. \\
+	
+	\item ネットワーク1で接続できなかったVirtual LAN間の接続を実現するためにルータを用いた. なぜルータを用いるとこの接続が
+		可能になるのか. \\
+		異なるVLAN間ではデータ通信が行えない. これは, VLANがブロードキャストドメインを分割し, ネットワークを別々のもの
+		にしているためである. スイッチはMACアドレスの解析によってパケット送信を行うが, MACアドレスの解析にはブロードキャスト
+		を用いる. そのため, 異なるVLAN間ではブロードキャストが異なりデータ通信が行えない. よって, ネットワーク1ではVLAN間の
+		ネットワーク接続が行えなかった. ルータを用いればMACアドレスによってではなく, IPアドレスによってネットワーク接続が
+		行えるため, レイヤ2より上位階層でルーティングを行える. 各ルータは自分のVLANに属しているデバイスに対しIPアドレス
+		を割り振り, その情報をRIPによりルータ間で共有することで, 全ての経路情報を知ることができる. そのため, ルータを用いる
+		ことで, 異なるVLAN間でネットワーク接続が行える. 
+		
+\end{itemize}
+
+\begin{thebibliography}{1}
+ \bibitem{pfilter} ネットワーク機器講座-スイッチ編, Alied Telesis: \url{https://www.allied-telesis.co.jp/library/nw_guide/device/switch.html}, (20161024)
+ \bibitem{bcontrol} 第1回：どれだけ知ってますかスイッチのこと, Think IT: \url{https://thinkit.co.jp/article/28/1/}, (20161024)
+ \bibitem{meta} ネットワークデバイス（ルーター、スイッチ、ブリッジ、ハブなど）の目的と機能 基礎の基礎, @IT:  \url{http://www.atmarkit.co.jp/ait/articles/1411/27/news021.html}, (20161024)
+ \bibitem{ando} 竹下隆史, 村山公保, 荒井透, 苅田幸雄, ``マスタリングTCP/IP 入門編 第5版'', オーム社, pp.99-102, (2015) 
+ \bibitem{libsvm} VLANの基本的な仕組みを攻略する, @IT: \url{http://www.atmarkit.co.jp/ait/articles/0506/04/news015.html}, 
+ 		(20161024)
+ \bibitem{pfilter} 今さら聞けない「VLANの基本」,  マイナビニュース: \url{http://news.mynavi.jp/series/vlan/001/}, (20161024)
+ \bibitem{bcontrol} 仮想LAN(Virtual LAN)の基本［ドメイン／サブネット／トランキング］, Think IT: 
+ 				\url{https://thinkit.co.jp/article/28/1/}, (20161024)
+ \bibitem{meta} 「ルータ」 「L3スイッチ」どっちが便利?!, EneWings:  \url{http://www.enecom.co.jp/business/enewings/itdictionary/routerorl3/}, (20161024)
+ \bibitem{ando} ルータを使用したVLAN間ルーティングとは, ネットワークエンジニアとして, \url{http://www.infraexpert.com/study/vlanz8.html}, (2015) 
+ \bibitem{libsvm} VLAN間ルーティング, 30分間NetWorking: \url{http://www5e.biglobe.ne.jp/\%257eaji/30min/sw15.html}, 
+ 		(20161024)
+ 		
+ 
+\end{thebibliography}
+
+
+
+\end{document}
